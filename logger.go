@@ -4,39 +4,25 @@ import (
 	"fmt"
 	"log"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
 
-// Functionallity
-// 1.- Simple Log
-// displays a log contaning the File, Line and Timestamp of where it has been invocated.
-// 2.- Status Log
-// displays a log and uses a different log method depending on the status given by the user.
-// 3.- Message Log
-// displays a log containing the message provided by the user.
-// 4.- Fault Log
-// displays a log with an error message and uses a different log method depending on the class given by the user.
-// 5.- Complete Log
-// displays a log containing all the default and optional parameters.
-
-// The following strings will be used
-// to format the data provided by the Info struct.
 var (
+	logger         Logger
 	output         string
-	simpleFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n"
-	statusFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Status: %s\n"
-	messageFormat  = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Message: %s\n"
-	faultFormat    = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Fault: %s\n"
-	completeFormat = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Status: %s\n| Message: %s\n| Fault: %s\n"
+	simpleFormat   = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n"
+	statusFormat   = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Status: %s\n"
+	messageFormat  = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Message: %s\n"
+	faultFormat    = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Fault: %s\n"
+	completeFormat = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Status: %s\n| Message: %s\n| Fault: %s\n"
 )
 
-// Info represents the data structure of
-// the information contained in the log message.
-type Info struct {
+// Logger represents the structure of the
+// information contained in the log message.
+type Logger struct {
 	File      string
-	Line      string
+	Line      int
 	Timestamp string
 	Status    string
 	Message   string
@@ -46,56 +32,49 @@ type Info struct {
 // Simple fires a log.Print containing the following information:
 // File, Line and Timestamp.
 func Simple() {
-	// Get rid if some log flags.
+	// Get rid of some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
 	// Get the name of the file and the line
 	// from where the method is being called.
-	_, filename, line, _ := runtime.Caller(1)
+	_, filename, line, ok := runtime.Caller(1)
 
-	// Fill the struct fields with data.
-	info := &Info{
-		File:      filename,
-		Line:      strconv.Itoa(line),
-		Timestamp: time.Now().Format(time.RFC3339),
+	// Check if the caller was able to recover the information.
+	if !ok {
+		log.Fatal("unable to recover information")
 	}
 
+	// Fill the struct fields.
+	logger.File = filename
+	logger.Line = line
+	logger.Timestamp = time.Now().Format(time.RFC3339)
+
 	// Format the data.
-	output = fmt.Sprintf(simpleFormat, info.File, info.Line, info.Timestamp)
+	output = fmt.Sprintf(simpleFormat, logger.File, logger.Line, logger.Timestamp)
 
 	// Display the information.
 	log.Print(output)
-
-	// Output.
-	// | File: path/to/file.go
-	// | Line: 69
-	// | Timestamp: 2022-01-13T16:38:46+01:00
 }
 
-// Status fires a different log method depending on the given status
+// Status fires a different log method depending on a given status
 // and contains the following information: File, Line, Timestamp and Status.
 func Status(status string) {
-	// Get rid if some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
-	// Get the name of the file and the line
-	// from where the method is being called.
-	_, filename, line, _ := runtime.Caller(1)
+	_, filename, line, ok := runtime.Caller(1)
 
-	// Fill the struct fields with data.
-	info := &Info{
-		File:      filename,
-		Line:      strconv.Itoa(line),
-		Timestamp: time.Now().Format(time.RFC3339),
-		Status:    strings.ToLower(status),
+	if !ok {
+		log.Fatal("unable to recover information")
 	}
 
-	// Format the data.
-	output = fmt.Sprintf(statusFormat, info.File, info.Line, info.Timestamp, info.Status)
+	logger.File = filename
+	logger.Line = line
+	logger.Timestamp = time.Now().Format(time.RFC3339)
+	logger.Status = strings.ToLower(status)
 
-	// Fires a different log method
-	// depending on the status.
-	switch info.Status {
+	output = fmt.Sprintf(statusFormat, logger.File, logger.Line, logger.Timestamp, logger.Status)
+
+	switch logger.Status {
 	case "success":
 		log.Print(output)
 	case "info":
@@ -109,68 +88,47 @@ func Status(status string) {
 	default:
 		log.Print(output)
 	}
-
-	// Output.
-	// | File: path/to/file.go
-	// | Line: 107
-	// | Timestamp: 2022-01-13T16:38:46+01:00
-	// | Status: info
 }
 
-// Message fires a log print containing the following information:
+// Message fires a log.Print containing the following information:
 // File, Line, Timestamp and Message.
 func Message(message string) {
-	// Get rid if some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
-	// Get the name of the file and the line
-	// from where the method is being called.
-	_, filename, line, _ := runtime.Caller(1)
+	_, filename, line, ok := runtime.Caller(1)
 
-	// Fill the struct fields with data.
-	info := &Info{
-		File:      filename,
-		Line:      strconv.Itoa(line),
-		Timestamp: time.Now().Format(time.RFC3339),
-		Message:   strings.ToLower(message),
+	if !ok {
+		log.Fatal("unable to recover information")
 	}
 
-	// Format the data.
-	output = fmt.Sprintf(messageFormat, info.File, info.Line, info.Timestamp, info.Message)
+	logger.File = filename
+	logger.Line = line
+	logger.Timestamp = time.Now().Format(time.RFC3339)
+	logger.Message = strings.ToLower(message)
 
-	// Display the information.
+	output = fmt.Sprintf(messageFormat, logger.File, logger.Line, logger.Timestamp, logger.Message)
+
 	log.Print(output)
-
-	// Output.
-	// | File: path/to/file.go
-	// | Line: 107
-	// | Timestamp: 2022-01-13T16:38:46+01:00
-	// | Message: beep beep boop
 }
 
-// Fault fires a different log method depending on the given class
+// Fault fires a different log method depending on a given class
 // and contains the following information: File, Line, Timestamp and Fault.
 func Fault(class string, fault error) {
-	// Get rid if some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
-	// Get the name of the file and the line
-	// from where the method is being called.
-	_, filename, line, _ := runtime.Caller(1)
+	_, filename, line, ok := runtime.Caller(1)
 
-	// Fill the struct fields with data.
-	info := &Info{
-		File:      filename,
-		Line:      strconv.Itoa(line),
-		Timestamp: time.Now().Format(time.RFC3339),
-		Fault:     fmt.Sprint(fault),
+	if !ok {
+		log.Fatal("unable to recover information")
 	}
 
-	// Format the data.
-	output = fmt.Sprintf(faultFormat, info.File, info.Line, info.Timestamp, info.Fault)
+	logger.File = filename
+	logger.Line = line
+	logger.Timestamp = time.Now().Format(time.RFC3339)
+	logger.Fault = fmt.Sprint(fault)
 
-	// Fires a different log method
-	// depending on the status.
+	output = fmt.Sprintf(faultFormat, logger.File, logger.Line, logger.Timestamp, logger.Fault)
+
 	switch strings.ToLower(class) {
 	case "fatal":
 		log.Fatal(output)
@@ -179,40 +137,29 @@ func Fault(class string, fault error) {
 	default:
 		log.Print(output)
 	}
-
-	// Output.
-	// | File: path/to/file.go
-	// | Line: 107
-	// | Timestamp: 2022-01-13T16:38:46+01:00
-	// | Fault: error message
 }
 
-// Complete fires a different log method depending on the given status
-// and contains the following information: File, Line, Timestamp, Status, Message and Fault
+// Complete fires a different log method depending on a given status
+// and contains the following information: File, Line, Timestamp, Status, Message and Fault.
 func Complete(status, message string, fault error) {
-	// Get rid if some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
-	// Get the name of the file and the line
-	// from where the method is being called.
-	_, filename, line, _ := runtime.Caller(1)
+	_, filename, line, ok := runtime.Caller(1)
 
-	// Fill the struct fields with data.
-	info := &Info{
-		File:      filename,
-		Line:      strconv.Itoa(line),
-		Timestamp: time.Now().Format(time.RFC3339),
-		Status:    strings.ToLower(status),
-		Message:   strings.ToLower(message),
-		Fault:     fmt.Sprint(fault),
+	if !ok {
+		log.Fatal("unable to recover information")
 	}
 
-	// Format the data.
-	output = fmt.Sprintf(completeFormat, info.File, info.Line, info.Timestamp, info.Status, info.Message, info.Fault)
+	logger.File = filename
+	logger.Line = line
+	logger.Timestamp = time.Now().Format(time.RFC3339)
+	logger.Status = strings.ToLower(status)
+	logger.Message = strings.ToLower(message)
+	logger.Fault = fmt.Sprint(fault)
 
-	// Fires a different log method
-	// depending on the status.
-	switch info.Status {
+	output = fmt.Sprintf(completeFormat, logger.File, logger.Line, logger.Timestamp, logger.Status, logger.Message, logger.Fault)
+
+	switch logger.Status {
 	case "success":
 		log.Print(output)
 	case "info":
@@ -226,12 +173,4 @@ func Complete(status, message string, fault error) {
 	default:
 		log.Print(output)
 	}
-
-	// Output.
-	// | File: path/to/file.go
-	// | Line: 69
-	// | Timestamp: 2022-01-13T16:38:46+01:00
-	// | Status: info
-	// | Message: the logger is up and running
-	// | Fault: <nil>
 }
