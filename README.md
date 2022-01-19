@@ -3,7 +3,6 @@ Golog lets you display errors with different types of characteristics and give c
 
 ## Roadmap
 - [x] Add new logger methods
-- [ ] Reduce redundancy in each method
 - [ ] Add color to output
 - [ ] Improve project structure
 - [ ] Improve code quality
@@ -12,7 +11,7 @@ Golog lets you display errors with different types of characteristics and give c
 - [ ] Setup CI
 
 ## Examples
-### Simple Logger: displays a log contaning the File, Line and Timestamp of where it has been invocated.
+**Simple Logger:** displays a log contaning the File, Line and Timestamp of where it has been invocated.
 ```go
 golog.Simple() // fires log.Print
 /*
@@ -22,7 +21,8 @@ golog.Simple() // fires log.Print
 * Timestamp: 2022-01-13T16:38:46+01:00
 */
 ```
-### Status Logger: displays a log and uses a different log method depending on the status given by the user.
+
+**Status Logger:** displays a log and uses a different log method depending on the status given by the user.
 ```go
 golog.Status("fatal") // fires log.Fatal
 /*
@@ -33,7 +33,8 @@ golog.Status("fatal") // fires log.Fatal
 * Status: fatal
 */
 ```
-### Message Logger: displays a log containing the message provided by the user.
+
+**Message Logger:** displays a log containing the message provided by the user.
 ```go
 golog.Message("beep beep boop") // fires log.Print
 /*
@@ -44,7 +45,8 @@ golog.Message("beep beep boop") // fires log.Print
 * Message: beep beep boop
 */
 ```
-### Fault Logger: displays a log with an error message and uses a different log method depending on the class given by the user.
+
+**Fault Logger:** displays a log with an error message and uses a different log method depending on the class given by the user.
 ```go
 golog.Fault("panic", err) // fires log.Panic
 /*
@@ -55,7 +57,8 @@ golog.Fault("panic", err) // fires log.Panic
 * Fault: invalid memory address or nil pointer dereference
 */
 ```
-### Complete Logger: displays a log containing all the default and optional parameters.
+
+**Complete Logger:** displays a log containing all the default and optional parameters.
 ```go
 golog.Complete("success", "the logger is up and running", nil) // fires log.Print
 /*
