@@ -1,8 +1,12 @@
-package golog
+package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -21,17 +25,104 @@ var (
 // Logger represents the structure of the
 // information contained in the log message.
 type Logger struct {
-	File      string
-	Line      int
-	Timestamp string
-	Status    string
-	Message   string
-	Fault     string
+	File      string `json:"file"`
+	Line      int    `json:"line"`
+	Timestamp string `json:"timestamp"`
+	Status    string `json:"status,omitempty"`
+	Message   string `json:"message,omitempty"`
+	Fault     string `json:"fault,omitempty"`
+}
+
+// Start creates a log file at the root of the current directory.
+func Start() error {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("unable to get working directory: %v", err)
+		return err
+	}
+
+	// Create the log file.
+	file, err := os.OpenFile(filepath.Clean(path.Join(dir, "golog.log")), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatalf("unable to create log file: %v", err)
+		return err
+	}
+
+	err = file.Close()
+	if err != nil {
+		log.Fatalf("unable to close file: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// Find looks for a log file in the current directory.
+func Find() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("unable to get working directory: %v", err)
+		return "", err
+	}
+
+	// Look for the log file.
+	file, err := filepath.Glob(path.Join(dir, "golog.log"))
+	if err != nil {
+		log.Fatalf("unable to find the log file: %v", err)
+		return "", err
+	}
+
+	logFile := strings.Join(file, "")
+
+	return logFile, nil
+}
+
+// Save stores the json log outputs to the log file.
+func Save(jsonLog string) error {
+	// Find the log file.
+	logFile, err := Find()
+	if err != nil {
+		log.Fatalf("unable to find the log file: %v", err)
+		return err
+	}
+
+	// Save to log file.
+	file, err := os.OpenFile(filepath.Clean(logFile), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatalf("unable to create/append/open log file: %v", err)
+		return err
+	}
+
+	_, err = file.Write([]byte(jsonLog))
+	if err != nil {
+		log.Fatalf("unable to write to file: %v", err)
+		return err
+	}
+
+	err = file.Close()
+	if err != nil {
+		log.Fatalf("unable to close file: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// JSON returns the log message output in JSON format.
+func JSON(logger Logger) (string, error) {
+	marshaled, err := json.MarshalIndent(logger, "", " ")
+	if err != nil {
+		log.Fatalf("unable to marshal the log message: %v", err)
+		return "", err
+	}
+
+	return string(marshaled), nil
 }
 
 // Simple fires a log.Print containing the following information:
 // File, Line and Timestamp.
-func Simple() {
+// (Optional) the output can be saved to a log file as JSON format.
+func Simple(save bool) {
 	// Get rid of some log flags.
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
@@ -49,6 +140,19 @@ func Simple() {
 	logger.Line = line
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 
+	// (Optional) save JSON output to log file.
+	if save {
+		jsonLog, err := JSON(logger)
+		if err != nil {
+			log.Fatalf("unable to marshal log message: %v", err)
+		}
+
+		err = Save(jsonLog)
+		if err != nil {
+			log.Fatalf("unable to save log message: %v", err)
+		}
+	}
+
 	// Format the data.
 	output = fmt.Sprintf(simpleFormat, logger.File, logger.Line, logger.Timestamp)
 
@@ -58,7 +162,8 @@ func Simple() {
 
 // Status fires a different log method depending on a given status
 // and contains the following information: File, Line, Timestamp and Status.
-func Status(status string) {
+// (Optional) the output can be saved to a log file as JSON format.
+func Status(status string, save bool) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
 	_, filename, line, ok := runtime.Caller(1)
@@ -71,6 +176,18 @@ func Status(status string) {
 	logger.Line = line
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Status = strings.ToLower(status)
+
+	if save {
+		jsonLog, err := JSON(logger)
+		if err != nil {
+			log.Fatalf("unable to marshal log message: %v", err)
+		}
+
+		err = Save(jsonLog)
+		if err != nil {
+			log.Fatalf("unable to save log message: %v", err)
+		}
+	}
 
 	output = fmt.Sprintf(statusFormat, logger.File, logger.Line, logger.Timestamp, logger.Status)
 
@@ -92,7 +209,8 @@ func Status(status string) {
 
 // Message fires a log.Print containing the following information:
 // File, Line, Timestamp and Message.
-func Message(message string) {
+// (Optional) the output can be saved to a log file as JSON format.
+func Message(message string, save bool) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
 	_, filename, line, ok := runtime.Caller(1)
@@ -106,6 +224,18 @@ func Message(message string) {
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Message = strings.ToLower(message)
 
+	if save {
+		jsonLog, err := JSON(logger)
+		if err != nil {
+			log.Fatalf("unable to marshal log message: %v", err)
+		}
+
+		err = Save(jsonLog)
+		if err != nil {
+			log.Fatalf("unable to save log message: %v", err)
+		}
+	}
+
 	output = fmt.Sprintf(messageFormat, logger.File, logger.Line, logger.Timestamp, logger.Message)
 
 	log.Print(output)
@@ -113,7 +243,8 @@ func Message(message string) {
 
 // Fault fires a different log method depending on a given class
 // and contains the following information: File, Line, Timestamp and Fault.
-func Fault(class string, fault error) {
+// (Optional) the output can be saved to a log file as JSON format.
+func Fault(class string, fault error, save bool) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
 	_, filename, line, ok := runtime.Caller(1)
@@ -126,6 +257,18 @@ func Fault(class string, fault error) {
 	logger.Line = line
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Fault = fmt.Sprint(fault)
+
+	if save {
+		jsonLog, err := JSON(logger)
+		if err != nil {
+			log.Fatalf("unable to marshal log message: %v", err)
+		}
+
+		err = Save(jsonLog)
+		if err != nil {
+			log.Fatalf("unable to save log message: %v", err)
+		}
+	}
 
 	output = fmt.Sprintf(faultFormat, logger.File, logger.Line, logger.Timestamp, logger.Fault)
 
@@ -141,7 +284,8 @@ func Fault(class string, fault error) {
 
 // Complete fires a different log method depending on a given status
 // and contains the following information: File, Line, Timestamp, Status, Message and Fault.
-func Complete(status, message string, fault error) {
+// (Optional) the output can be saved to a log file as JSON format.
+func Complete(status, message string, fault error, save bool) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 
 	_, filename, line, ok := runtime.Caller(1)
@@ -156,6 +300,18 @@ func Complete(status, message string, fault error) {
 	logger.Status = strings.ToLower(status)
 	logger.Message = strings.ToLower(message)
 	logger.Fault = fmt.Sprint(fault)
+
+	if save {
+		jsonLog, err := JSON(logger)
+		if err != nil {
+			log.Fatalf("unable to marshal log message: %v", err)
+		}
+
+		err = Save(jsonLog)
+		if err != nil {
+			log.Fatalf("unable to save log message: %v", err)
+		}
+	}
 
 	output = fmt.Sprintf(completeFormat, logger.File, logger.Line, logger.Timestamp, logger.Status, logger.Message, logger.Fault)
 
@@ -173,4 +329,13 @@ func Complete(status, message string, fault error) {
 	default:
 		log.Print(output)
 	}
+}
+
+func main() {
+	err := Start()
+	if err != nil {
+		log.Fatalf("unable to start logger: %v", err)
+	}
+
+	Simple(true)
 }
