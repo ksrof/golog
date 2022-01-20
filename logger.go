@@ -1,4 +1,4 @@
-package main
+package golog
 
 import (
 	"encoding/json"
@@ -329,13 +329,4 @@ func Complete(status, message string, fault error, save bool) {
 	default:
 		log.Print(output)
 	}
-}
-
-func main() {
-	err := Start()
-	if err != nil {
-		log.Fatalf("unable to start logger: %v", err)
-	}
-
-	Simple(true)
 }
