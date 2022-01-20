@@ -2,12 +2,15 @@
 Golog lets you display errors with different types of characteristics and give context when things go wrong.
 
 ## Roadmap
-- [x] Add new logger methods
-- [ ] Add color to output
-- [ ] Improve project structure
-- [ ] Improve code quality
-- [ ] Implement unit tests
-- [ ] Add logger documentation
+- [x] New logger methods
+  - [x] Status log
+  - [x] Message log
+  - [x] Fault log
+  - [x] Complete log
+- [x] (Optional) Save log to file
+- [ ] Colored output
+- [ ] Implement tests
+- [ ] Documentation
 - [ ] Setup CI
 
 ## Examples
