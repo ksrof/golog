@@ -1,4 +1,4 @@
-package main
+package golog
 
 import (
 	"encoding/json"
@@ -333,8 +333,4 @@ func Complete(status, message string, fault error, save bool) {
 	default:
 		log.Print(output)
 	}
-}
-
-func main() {
-	Simple(false)
 }
