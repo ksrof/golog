@@ -1,4 +1,4 @@
-package golog
+package main
 
 import (
 	"encoding/json"
@@ -8,25 +8,28 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ksrof/gocolors"
 )
 
 var (
 	logger         Logger
 	output         string
-	simpleFormat   = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n"
-	statusFormat   = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Status: %s\n"
-	messageFormat  = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Message: %s\n"
-	faultFormat    = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Fault: %s\n"
-	completeFormat = "\n| File: %s\n| Line: %d\n| Timestamp: %s\n| Status: %s\n| Message: %s\n| Fault: %s\n"
+	simpleFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n"
+	statusFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Status: %s\n"
+	messageFormat  = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Message: %s\n"
+	faultFormat    = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Fault: %s\n"
+	completeFormat = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Status: %s\n| Message: %s\n| Fault: %s\n"
 )
 
 // Logger represents the structure of the
 // information contained in the log message.
 type Logger struct {
 	File      string `json:"file"`
-	Line      int    `json:"line"`
+	Line      string `json:"line"`
 	Timestamp string `json:"timestamp"`
 	Status    string `json:"status,omitempty"`
 	Message   string `json:"message,omitempty"`
@@ -136,9 +139,10 @@ func Simple(save bool) {
 	}
 
 	// Fill the struct fields.
-	logger.File = filename
-	logger.Line = line
-	logger.Timestamp = time.Now().Format(time.RFC3339)
+	// Apply colors to each field.
+	logger.File = gocolors.Cyan(filename, "")
+	logger.Line = gocolors.Cyan(strconv.Itoa(line), "")
+	logger.Timestamp = gocolors.Cyan(time.Now().Format(time.RFC3339), "")
 
 	// (Optional) save JSON output to log file.
 	if save {
@@ -173,7 +177,7 @@ func Status(status string, save bool) {
 	}
 
 	logger.File = filename
-	logger.Line = line
+	logger.Line = strconv.Itoa(line)
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Status = strings.ToLower(status)
 
@@ -220,7 +224,7 @@ func Message(message string, save bool) {
 	}
 
 	logger.File = filename
-	logger.Line = line
+	logger.Line = strconv.Itoa(line)
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Message = strings.ToLower(message)
 
@@ -254,7 +258,7 @@ func Fault(class string, fault error, save bool) {
 	}
 
 	logger.File = filename
-	logger.Line = line
+	logger.Line = strconv.Itoa(line)
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Fault = fmt.Sprint(fault)
 
@@ -295,7 +299,7 @@ func Complete(status, message string, fault error, save bool) {
 	}
 
 	logger.File = filename
-	logger.Line = line
+	logger.Line = strconv.Itoa(line)
 	logger.Timestamp = time.Now().Format(time.RFC3339)
 	logger.Status = strings.ToLower(status)
 	logger.Message = strings.ToLower(message)
@@ -329,4 +333,8 @@ func Complete(status, message string, fault error, save bool) {
 	default:
 		log.Print(output)
 	}
+}
+
+func main() {
+	Simple(false)
 }
