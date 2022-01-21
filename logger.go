@@ -17,7 +17,6 @@ import (
 
 var (
 	logger         Logger
-	output         string
 	simpleFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n"
 	statusFormat   = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Status: %s\n"
 	messageFormat  = "\n| File: %s\n| Line: %s\n| Timestamp: %s\n| Message: %s\n"
@@ -122,6 +121,36 @@ func JSON(logger Logger) (string, error) {
 	return string(marshaled), nil
 }
 
+// Format formats the logger struct to a readable output.
+func Format(logger Logger) string {
+	if len(logger.Status) <= 0 && len(logger.Message) <= 0 && len(logger.Fault) <= 0 {
+		output := fmt.Sprintf(simpleFormat, logger.File, logger.Line, logger.Timestamp)
+		return output
+	}
+
+	if len(logger.Status) > 0 && len(logger.Message) > 0 && len(logger.Fault) > 0 {
+		output := fmt.Sprintf(completeFormat, logger.File, logger.Line, logger.Timestamp, logger.Status, logger.Message, logger.Fault)
+		return output
+	}
+
+	if len(logger.Status) > 0 {
+		output := fmt.Sprintf(statusFormat, logger.File, logger.Line, logger.Timestamp, logger.Status)
+		return output
+	}
+
+	if len(logger.Message) > 0 {
+		output := fmt.Sprintf(messageFormat, logger.File, logger.Line, logger.Timestamp, logger.Message)
+		return output
+	}
+
+	if len(logger.Fault) > 0 {
+		output := fmt.Sprintf(faultFormat, logger.File, logger.Line, logger.Timestamp, logger.Fault)
+		return output
+	}
+
+	return ""
+}
+
 // Simple fires a log.Print containing the following information:
 // File, Line and Timestamp.
 // (Optional) the output can be saved to a log file as JSON format.
@@ -140,9 +169,11 @@ func Simple(save bool) {
 
 	// Fill the struct fields.
 	// Apply colors to each field.
-	logger.File = gocolors.Cyan(filename, "")
-	logger.Line = gocolors.Cyan(strconv.Itoa(line), "")
-	logger.Timestamp = gocolors.Cyan(time.Now().Format(time.RFC3339), "")
+	logger = Logger{
+		File:      gocolors.Cyan(filename, ""),
+		Line:      gocolors.Cyan(strconv.Itoa(line), ""),
+		Timestamp: gocolors.Cyan(time.Now().Format(time.RFC3339), ""),
+	}
 
 	// (Optional) save JSON output to log file.
 	if save {
@@ -158,7 +189,7 @@ func Simple(save bool) {
 	}
 
 	// Format the data.
-	output = fmt.Sprintf(simpleFormat, logger.File, logger.Line, logger.Timestamp)
+	output := Format(logger)
 
 	// Display the information.
 	log.Print(output)
@@ -176,11 +207,6 @@ func Status(status string, save bool) {
 		log.Fatal("unable to recover information")
 	}
 
-	logger.File = filename
-	logger.Line = strconv.Itoa(line)
-	logger.Timestamp = time.Now().Format(time.RFC3339)
-	logger.Status = strings.ToLower(status)
-
 	if save {
 		jsonLog, err := JSON(logger)
 		if err != nil {
@@ -193,20 +219,66 @@ func Status(status string, save bool) {
 		}
 	}
 
-	output = fmt.Sprintf(statusFormat, logger.File, logger.Line, logger.Timestamp, logger.Status)
-
-	switch logger.Status {
+	switch strings.ToLower(status) {
 	case "success":
+		logger = Logger{
+			File:      gocolors.Green(filename, ""),
+			Line:      gocolors.Green(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Green(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Green(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "info":
+		logger = Logger{
+			File:      gocolors.Blue(filename, ""),
+			Line:      gocolors.Blue(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Blue(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Blue(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "error":
+		logger = Logger{
+			File:      gocolors.Yellow(filename, ""),
+			Line:      gocolors.Yellow(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Yellow(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Yellow(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "fatal":
+		logger = Logger{
+			File:      gocolors.Magenta(filename, ""),
+			Line:      gocolors.Magenta(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Magenta(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Magenta(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Fatal(output)
 	case "panic":
+		logger = Logger{
+			File:      gocolors.Red(filename, ""),
+			Line:      gocolors.Red(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Red(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Red(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Panic(output)
 	default:
+		logger = Logger{
+			File:      gocolors.White(filename, ""),
+			Line:      gocolors.White(strconv.Itoa(line), ""),
+			Timestamp: gocolors.White(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.White(strings.ToLower(status), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	}
 }
@@ -223,10 +295,12 @@ func Message(message string, save bool) {
 		log.Fatal("unable to recover information")
 	}
 
-	logger.File = filename
-	logger.Line = strconv.Itoa(line)
-	logger.Timestamp = time.Now().Format(time.RFC3339)
-	logger.Message = strings.ToLower(message)
+	logger = Logger{
+		File:      gocolors.Cyan(filename, ""),
+		Line:      gocolors.Cyan(strconv.Itoa(line), ""),
+		Timestamp: gocolors.Cyan(time.Now().Format(time.RFC3339), ""),
+		Message:   gocolors.Cyan(strings.ToLower(message), ""),
+	}
 
 	if save {
 		jsonLog, err := JSON(logger)
@@ -240,7 +314,7 @@ func Message(message string, save bool) {
 		}
 	}
 
-	output = fmt.Sprintf(messageFormat, logger.File, logger.Line, logger.Timestamp, logger.Message)
+	output := Format(logger)
 
 	log.Print(output)
 }
@@ -257,11 +331,6 @@ func Fault(class string, fault error, save bool) {
 		log.Fatal("unable to recover information")
 	}
 
-	logger.File = filename
-	logger.Line = strconv.Itoa(line)
-	logger.Timestamp = time.Now().Format(time.RFC3339)
-	logger.Fault = fmt.Sprint(fault)
-
 	if save {
 		jsonLog, err := JSON(logger)
 		if err != nil {
@@ -274,14 +343,36 @@ func Fault(class string, fault error, save bool) {
 		}
 	}
 
-	output = fmt.Sprintf(faultFormat, logger.File, logger.Line, logger.Timestamp, logger.Fault)
-
 	switch strings.ToLower(class) {
 	case "fatal":
+		logger = Logger{
+			File:      gocolors.Magenta(filename, ""),
+			Line:      gocolors.Magenta(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Magenta(time.Now().Format(time.RFC3339), ""),
+			Fault:     gocolors.Magenta(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Fatal(output)
 	case "panic":
+		logger = Logger{
+			File:      gocolors.Red(filename, ""),
+			Line:      gocolors.Red(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Red(time.Now().Format(time.RFC3339), ""),
+			Fault:     gocolors.Red(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Panic(output)
 	default:
+		logger = Logger{
+			File:      gocolors.Yellow(filename, ""),
+			Line:      gocolors.Yellow(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Yellow(time.Now().Format(time.RFC3339), ""),
+			Fault:     gocolors.Yellow(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	}
 }
@@ -298,13 +389,6 @@ func Complete(status, message string, fault error, save bool) {
 		log.Fatal("unable to recover information")
 	}
 
-	logger.File = filename
-	logger.Line = strconv.Itoa(line)
-	logger.Timestamp = time.Now().Format(time.RFC3339)
-	logger.Status = strings.ToLower(status)
-	logger.Message = strings.ToLower(message)
-	logger.Fault = fmt.Sprint(fault)
-
 	if save {
 		jsonLog, err := JSON(logger)
 		if err != nil {
@@ -317,20 +401,78 @@ func Complete(status, message string, fault error, save bool) {
 		}
 	}
 
-	output = fmt.Sprintf(completeFormat, logger.File, logger.Line, logger.Timestamp, logger.Status, logger.Message, logger.Fault)
-
-	switch logger.Status {
+	switch strings.ToLower(status) {
 	case "success":
+		logger = Logger{
+			File:      gocolors.Green(filename, ""),
+			Line:      gocolors.Green(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Green(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Green(strings.ToLower(status), ""),
+			Message:   gocolors.Green(strings.ToLower(message), ""),
+			Fault:     gocolors.Green(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "info":
+		logger = Logger{
+			File:      gocolors.Blue(filename, ""),
+			Line:      gocolors.Blue(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Blue(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Blue(strings.ToLower(status), ""),
+			Message:   gocolors.Blue(strings.ToLower(message), ""),
+			Fault:     gocolors.Blue(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "error":
+		logger = Logger{
+			File:      gocolors.Yellow(filename, ""),
+			Line:      gocolors.Yellow(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Yellow(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Yellow(strings.ToLower(status), ""),
+			Message:   gocolors.Yellow(strings.ToLower(message), ""),
+			Fault:     gocolors.Yellow(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	case "fatal":
+		logger = Logger{
+			File:      gocolors.Magenta(filename, ""),
+			Line:      gocolors.Magenta(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Magenta(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Magenta(strings.ToLower(status), ""),
+			Message:   gocolors.Magenta(strings.ToLower(message), ""),
+			Fault:     gocolors.Magenta(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Fatal(output)
 	case "panic":
+		logger = Logger{
+			File:      gocolors.Red(filename, ""),
+			Line:      gocolors.Red(strconv.Itoa(line), ""),
+			Timestamp: gocolors.Red(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.Red(strings.ToLower(status), ""),
+			Message:   gocolors.Red(strings.ToLower(message), ""),
+			Fault:     gocolors.Red(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Panic(output)
 	default:
+		logger = Logger{
+			File:      gocolors.White(filename, ""),
+			Line:      gocolors.White(strconv.Itoa(line), ""),
+			Timestamp: gocolors.White(time.Now().Format(time.RFC3339), ""),
+			Status:    gocolors.White(strings.ToLower(status), ""),
+			Message:   gocolors.White(strings.ToLower(message), ""),
+			Fault:     gocolors.White(fmt.Sprint(fault), ""),
+		}
+		output := Format(logger)
+
 		log.Print(output)
 	}
 }
