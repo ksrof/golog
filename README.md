@@ -9,7 +9,7 @@ Golog lets you display errors with different types of characteristics and give c
   - [x] Complete log
 - [x] (Optional) Save log to file
 - [x] Colored output
-- [ ] Implement tests
+- [x] Implement tests
 - [ ] Documentation
 - [ ] Setup CI
 
