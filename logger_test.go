@@ -2,6 +2,7 @@ package golog
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -117,4 +118,25 @@ func TestLogger(t *testing.T) {
 	}
 
 	t.Log("\n✅ TestLogger test passed...\n")
+}
+
+// BenchmarkSimple tests the performance of the Simple method.
+func BenchmarkSimple(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Simple(false)
+	}
+}
+
+// BenchmarkComplete tests the performance of the Complete method.
+func BenchmarkComplete(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Complete("info", "benchmarking complete method", nil, false)
+	}
+}
+
+// BenchmarkFault tests the performance of the Fault method.
+func BenchmarkFault(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Fault("warning", errors.New("benchmarking fault method"), false)
+	}
 }
