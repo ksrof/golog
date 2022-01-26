@@ -63,7 +63,7 @@ func TestSave(t *testing.T) {
 	// Get information about the file and the line.
 	_, filename, line, _ := runtime.Caller(1)
 
-	logger = Logger{
+	logger := Logger{
 		File:      filename,
 		Line:      strconv.Itoa(line),
 		Timestamp: time.Now().Format(time.RFC3339),
@@ -72,12 +72,7 @@ func TestSave(t *testing.T) {
 		Fault:     fmt.Sprint(nil),
 	}
 
-	jsonLog, err := JSON(logger)
-	if err != nil {
-		t.Fatalf("\n❌ Unable to marshal the log message: %v\n", err)
-	}
-
-	err = Save(jsonLog)
+	err := Save(logger)
 	if err != nil {
 		t.Fatalf("\n❌ Unable to save the log message to the log file: %v\n", err)
 	}
