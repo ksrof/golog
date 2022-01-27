@@ -1,82 +1,48 @@
 # Golog
-Golog lets you display errors with different types of characteristics and give context when things go wrong.
+Golog is a logger library for Go (golang), which works on top of the standard library logger. It gives nicely color-coded output (when a terminal is used) otherwise it can write the contents to a file in JSON format.
 
+![Golog output](https://github.com/ksrof/golog/blob/main/images/golog_output.png)
 ## Roadmap
 - [x] New logger methods
-  - [x] Status log
-  - [x] Message log
   - [x] Fault log
   - [x] Complete log
 - [x] (Optional) Save log to file
 - [x] Colored output
 - [x] Implement tests
-- [ ] Documentation
-- [ ] Setup CI
+- [x] Documentation
+- [x] CI workflow
+
+The following ideas should be included in further releases, but the intentions are to have all this features added in the first stable version of the **golog logger library**.
+
+**Important note** This project is still in its early stages so expect breaking changes in the API, experiment, play and contribute but don't use it in production code or something that is serious enough.
+
+### Golog Version 1.0.0
+- [ ] Logger method with custom fields
+- [ ] Plain text and JSON output
+- [ ] Save to specific log file
+- [ ] Multi level logging
+- [ ] Environment option
+- [ ] Multiple terminal outputs
+- [ ] Logger assertion on tests
+- [ ] Fatal and Panic graceful handling
 
 ## Examples
-**Simple Logger:** displays a log contaning the File, Line and Timestamp of where it has been invocated.
+The simplest way to use Golog is the Simple method:
 ```go
-golog.Simple() // fires log.Print
-/*
-* Output:
-* File: path/to/file.go
-* Line: 45
-* Timestamp: 2022-01-13T16:38:46+01:00
-*/
-```
+package main
 
-**Status Logger:** displays a log and uses a different log method depending on the status given by the user.
-```go
-golog.Status("fatal") // fires log.Fatal
-/*
-* Output:
-* File: path/to/file.go
-* Line:	45
-* Timestamp: 2022-01-13T16:38:46+01:00
-* Status: fatal
-*/
-```
+import (
+  log "github.com/ksrof/golog"
+)
 
-**Message Logger:** displays a log containing the message provided by the user.
-```go
-golog.Message("beep beep boop") // fires log.Print
-/*
-* Output:
-* File: path/to/file.go
-* Line: 45
-* Timestamp: 2022-01-13T16:38:46+01:00
-* Message: beep beep boop
-*/
+func main() {
+  // Simple returns File, Line and Timestamp
+  // it also takes a boolean parameter to determine
+  // whether or not it should save the output to a file.
+  log.Simple(false)
+}
 ```
-
-**Fault Logger:** displays a log with an error message and uses a different log method depending on the class given by the user.
-```go
-golog.Fault("panic", err) // fires log.Panic
-/*
-* Output:
-* File: path/to/file.go
-* Line: 45
-* Timestamp: 2022-01-13T16:38:46+01:00
-* Fault: invalid memory address or nil pointer dereference
-*/
-```
-
-**Complete Logger:** displays a log containing all the default and optional parameters.
-```go
-golog.Complete("success", "the logger is up and running", nil) // fires log.Print
-/*
-* Output:
-* File: path/to/file.go
-* Line: 45
-* Timestamp: 2022-01-13T16:38:46+01:00
-* Status: success
-* Message: the logger is up and running
-* Fault: <nil>
-*/
-```
-
-## Credits
-* [Kevin Suñer](https://github.com/ksrof)
+As you might be seeing it is fully compatible with the standard library logger meaning that you can replace all your `log` imports with `log "github.com/ksrof/golog"` and profit from the cool features that it has!
 
 ## License
 The MIT License (MIT) - see [`license`](https://github.com/ksrof/golog/blob/main/LICENSE) for more details.
