@@ -1,5 +1,5 @@
 # Golog
-Golog is a logger library for Go (golang), which works on top of the standard library logger. It gives nicely color-coded output (when a terminal is used) otherwise it can write the contents to a file in JSON format.
+Logger library for `Golang` which works on top of the standard library logger. It gives a nicely color-coded output (when used alongisde a `TTY`) otherwise it can write the contents to a file in `JSON` format.
 
 ![Golog output](https://github.com/ksrof/golog/blob/main/images/golog_output.png)
 ## Roadmap
